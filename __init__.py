@@ -90,12 +90,12 @@ class ViewCrafterTxTNode:
         img = img.numpy()[0] * 255
         img_np = img.astype(np.uint8)
         img_pil = Image.fromarray(img_np)
-        '''
+        
         org_h, org_w = img_pil.size
         height,width = (1024,math.ceil(1024 * org_w/org_h/64)*64) if org_h > org_w else (math.ceil(1024 * org_h/org_w/64)*64,1024)
-        #img_pil = img_pil.resize((height,width))
+        img_pil = img_pil.resize((height,width))
         print(f"from {(org_h,org_w)} to {(height, width)}")
-        '''
+        
         opts.height = 576
         opts.width = 1024
         tmp_img_path = os.path.join(opts.save_dir,"tmp.png")
