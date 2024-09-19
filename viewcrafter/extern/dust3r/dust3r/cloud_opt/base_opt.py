@@ -368,6 +368,7 @@ def global_alignment_loop(net, lr=0.01, niter=300, schedule='cosine', lr_min=1e-
 
             optimizer.zero_grad()
             loss = net()
+            loss.requires_grad_(True)
             loss.backward()
             optimizer.step()
             loss = float(loss)

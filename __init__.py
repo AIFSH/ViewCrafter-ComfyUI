@@ -2,12 +2,13 @@ import os,sys
 now_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(now_dir)
 
+import shutil
 import math
 import folder_paths
 import numpy as np
 from PIL import Image
 from huggingface_hub import snapshot_download
-from viewcrafter.viewcrafter import ViewCrafter
+from .infer import ViewCrafter
 from viewcrafter.configs.infer_config import get_parser
 
 output_dir = folder_paths.get_output_directory()
@@ -88,14 +89,15 @@ class ViewCrafterTxTNode:
         
         img = img.numpy()[0] * 255
         img_np = img.astype(np.uint8)
-        print(img_np.shape)
         img_pil = Image.fromarray(img_np)
+        '''
         org_h, org_w = img_pil.size
         height,width = (1024,math.ceil(1024 * org_w/org_h/64)*64) if org_h > org_w else (math.ceil(1024 * org_h/org_w/64)*64,1024)
-        img_pil = img_pil.resize((height,width))
+        #img_pil = img_pil.resize((height,width))
         print(f"from {(org_h,org_w)} to {(height, width)}")
-        opts.height = height
-        opts.width = width
+        '''
+        opts.height = 576
+        opts.width = 1024
         tmp_img_path = os.path.join(opts.save_dir,"tmp.png")
         img_pil.save(tmp_img_path)
 
@@ -132,8 +134,10 @@ class ViewCrafterTxTNode:
             self.pvd = ViewCrafter(opts)
         self.pvd.nvs_single_view()
 
-        res_video = os.path.join(opts.save_dir, 'diffusion0.mp4')
-        traj_video = os.path.join(opts.save_dir,'viz_traj.mp4')
+        res_video = os.path.join(output_dir, f'{traj_txt}_diffusion0.mp4')
+        shutil.copy(os.path.join(opts.save_dir, 'diffusion0.mp4'),res_video)
+        traj_video = os.path.join(output_dir,f'{traj_txt}_viz_traj.mp4')
+        shutil.copy(os.path.join(opts.save_dir,'viz_traj.mp4'),traj_video)
         return (res_video, traj_video,)
 
 

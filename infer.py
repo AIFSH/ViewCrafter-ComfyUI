@@ -1,6 +1,11 @@
 import os,sys
 now_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(now_dir,"extern"))
+sys.path.append(now_dir)
+sys.path.append(os.path.join(now_dir,"viewcrafter"))
+sys.path.append(os.path.join(now_dir,"viewcrafter/extern/dust3r"))
+import viewcrafter.utils as utils
+comfyui_utils = sys.modules['utils']
+sys.modules['utils'] = utils
 from dust3r.inference import inference, load_model
 from dust3r.utils.image import load_images
 from dust3r.image_pairs import make_pairs
@@ -20,13 +25,13 @@ from torchvision.utils import save_image
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from PIL import Image
-from .utils.pvd_utils import *
+from utils.pvd_utils import *
 from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
-from .utils.diffusion_utils import instantiate_from_config,load_model_checkpoint,image_guided_synthesis
+from utils.diffusion_utils import instantiate_from_config,load_model_checkpoint,image_guided_synthesis
 from pathlib import Path
 from torchvision.utils import save_image
-
+sys.modules['utils'] = comfyui_utils
 class ViewCrafter:
     def __init__(self, opts, gradio = False):
         self.opts = opts
@@ -42,11 +47,11 @@ class ViewCrafter:
         pairs = make_pairs(input_images, scene_graph='complete', prefilter=None, symmetrize=True)
         output = inference(pairs, self.dust3r, self.device, batch_size=self.opts.batch_size)
 
-        mode = GlobalAlignerMode.PointCloudOptimizer #if len(self.images) > 2 else GlobalAlignerMode.PairViewer
+        mode = GlobalAlignerMode.PointCloudOptimizer # if len(self.images) > 2 else GlobalAlignerMode.PairViewer
         scene = global_aligner(output, device=self.device, mode=mode)
         if mode == GlobalAlignerMode.PointCloudOptimizer:
             loss = scene.compute_global_alignment(init='mst', niter=self.opts.niter, schedule=self.opts.schedule, lr=self.opts.lr)
-
+            # loss.requires_grad_(True)
         if clean_pc:
             self.scene = scene.clean_pointcloud()
         else:
